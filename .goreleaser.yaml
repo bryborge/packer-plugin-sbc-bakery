@@ -43,8 +43,10 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      - --detach-sign
       - --armor
+      # For GitHub action and other automated pipeline, you must pass the batch flag to indicate its not interactive.
+      - --batch
+      - --detach-sign
 
 changelog:
   sort: asc

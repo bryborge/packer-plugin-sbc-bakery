@@ -10,7 +10,8 @@
         "golang.go",
         "EditorConfig.EditorConfig",
         "nhoizey.gremlins",
-        "hashicorp.hcl"
+        "hashicorp.hcl",
+        "ms-vscode.makefile-tools"
       ],
       "settings": {
         "go.useLanguageServer": true
