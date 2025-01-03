@@ -1,0 +1,61 @@
+version: 2
+
+env:
+  - CGO_ENABLED=0
+  goos:
+    - linux
+    - windows
+    - darwin
+
+before:
+  hooks:
+    - go mod tidy       # you may remove this if you don't use go modules
+    - go generate ./... # you may remove this if you don't need go generate
+    - go test ./...
+    - make plugin-check
+
+builds:
+  # Run packer-plugins-check
+  - id: plugin-check
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath # remove all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+
+  # TODO: Build the plugin
+
+archives:
+  - format: zip
+    files:
+      - none*
+    name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+
+checksum:
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    args:
+      - --detach-sign
+      - --armor
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  footer: >-
+
+    ---
+
+    Released using [GoReleaser](https://github.com/goreleaser/goreleaser).
