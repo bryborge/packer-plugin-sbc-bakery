@@ -1,0 +1,30 @@
+{
+  "name": "SBCBakery",
+  "dockerFile": "Dockerfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "shardulm94.trailing-spaces",
+        "IBM.output-colorizer",
+        "golang.go",
+        "EditorConfig.EditorConfig",
+        "nhoizey.gremlins",
+        "hashicorp.hcl"
+      ],
+      "settings": {
+        "go.useLanguageServer": true
+      }
+    }
+  },
+  "runArgs": [
+      "-u",
+      "vscode",
+      "--cap-add=SYS_PTRACE",
+      "--security-opt",
+      "seccomp=unconfined",
+      // map SSH keys for Git
+      "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro"
+  ],
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+}
