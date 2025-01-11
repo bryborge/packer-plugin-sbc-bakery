@@ -14,5 +14,5 @@ go.mod, and anywhere else it may be set, simply set the `GO_VERSION` variable in
 run:
 
 ```sh
-make update-go-version
+make set-go-version
 ```
