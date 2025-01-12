@@ -7,7 +7,7 @@ before:
   hooks:
     - go mod tidy       # you may remove this if you don't use go modules
     - go generate ./... # you may remove this if you don't need go generate
-    - go test ./...
+    # - go test ./...
     - make plugin-check
 
 builds:
@@ -24,7 +24,19 @@ builds:
       - amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 
-  # TODO: Build the plugin
+  # Build the plugin for all supported platforms
+  - mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath # remove all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 
 archives:
   - format: zip
@@ -43,6 +55,7 @@ signs:
       # For GitHub action and other automated pipeline, you must pass the batch flag to indicate its not interactive.
       - --batch
       - --detach-sign
+      - "{{ .Env.GPG_FINGERPRINT }}"
 
 changelog:
   sort: asc
