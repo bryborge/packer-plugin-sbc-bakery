@@ -56,9 +56,12 @@ signs:
   - artifacts: checksum
     args:
       - --armor
-      # For GitHub action and other automated pipeline, you must pass the batch flag to indicate its not interactive.
+      # For GitHub actions and other automated pipelines, you must pass the batch flag to indicate its not interactive.
       - --batch
       - --detach-sign
+      - --output
+      - "${signature}"
+      - "${artifact}"
       - "{{ .Env.GPG_FINGERPRINT }}"
 
 changelog:
