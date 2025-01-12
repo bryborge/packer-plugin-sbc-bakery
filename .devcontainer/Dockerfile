@@ -1,6 +1,4 @@
-ARG GO_VERSION=1.23.4
-
-FROM golang:${GO_VERSION}
+FROM golang:1.23.4
 ARG USERNAME=vscode
 
 # Setup user
