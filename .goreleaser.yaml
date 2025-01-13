@@ -55,6 +55,7 @@ checksum:
 signs:
   - artifacts: checksum
     args:
+      - --armor
       # For GitHub actions and other automated pipelines, you must pass the batch flag to indicate its not interactive.
       - --batch
       - --local-user
