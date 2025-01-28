@@ -13,7 +13,7 @@ import (
 func main() {
 	pps := plugin.NewSet()
 	// Register Builders, Provisioners, Post-Processors, and Datasources here ...
-	pps.RegisterBuilder("sbc-builder", new(builder.NewBuilder))
+	pps.RegisterBuilder("sbc-builder", builder.NewBuilder())
 	pps.SetVersion(sbcBakeryVersion.PluginVersion)
 
 	err := pps.Run()

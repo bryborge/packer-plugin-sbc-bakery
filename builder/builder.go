@@ -17,7 +17,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/common"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -26,6 +25,8 @@ import (
 type Config struct {
 	common.PackerConfig  `mapstructure:",squash"`
 	cfg.RemoteFileConfig `mapstructure:",squash"`
+
+	ctx interpolate.Context
 }
 
 type Builder struct {
@@ -33,9 +34,11 @@ type Builder struct {
 	context context.Context
 	cancel  context.CancelFunc
 
-	runner multistep.Runner
+	// TODO: Actually do something ...
+	// runner multistep.Runner
 }
 
+// Returns a new instance of the builder.
 func NewBuilder() *Builder {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Builder{
@@ -44,7 +47,7 @@ func NewBuilder() *Builder {
 	}
 }
 
-// ConfigSpec returns the configuration specification for the builder.
+// Returns the configuration specification for the builder.
 // Docs: https://developer.hashicorp.com/packer/docs/plugins/creation/custom-builders#the-configspec-method
 func (b *Builder) ConfigSpec() hcldec.ObjectSpec {
 	return b.config.FlatMapstructure().HCL2Spec()
@@ -63,7 +66,7 @@ func (b *Builder) InitConfig(ctx *interpolate.Context) (warnings []string, error
 	return warnings, errors
 }
 
-// Prepare processes the input configuration and returns any warnings and errors.
+// Processes the input configuration and returns any warnings and errors.
 // Docs: https://developer.hashicorp.com/packer/docs/plugins/creation/custom-builders#the-prepare-method
 func (b *Builder) Prepare(args ...interface{}) ([]string, []string, error) {
 	var (
@@ -89,6 +92,9 @@ func (b *Builder) Prepare(args ...interface{}) ([]string, []string, error) {
 	return nil, warnings, nil
 }
 
-// func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-// 	return nil, nil
-// }
+// Executes the build and returns an artifact.
+// Docs: https://developer.hashicorp.com/packer/docs/plugins/creation/custom-builders#the-run-method
+func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
+	// TODO: Actually do something ...
+	return nil, nil
+}
