@@ -12,11 +12,14 @@ package builder
 
 import (
 	"context"
+	"errors"
 
 	cfg "github.com/bryborge/sbc-bakery/config"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -25,6 +28,7 @@ import (
 type Config struct {
 	common.PackerConfig  `mapstructure:",squash"`
 	cfg.RemoteFileConfig `mapstructure:",squash"`
+	cfg.ImageConfig      `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -34,8 +38,7 @@ type Builder struct {
 	context context.Context
 	cancel  context.CancelFunc
 
-	// TODO: Actually do something ...
-	// runner multistep.Runner
+	runner multistep.Runner
 }
 
 // Returns a new instance of the builder.
@@ -95,6 +98,49 @@ func (b *Builder) Prepare(args ...interface{}) ([]string, []string, error) {
 // Executes the build and returns an artifact.
 // Docs: https://developer.hashicorp.com/packer/docs/plugins/creation/custom-builders#the-run-method
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	// TODO: Actually do something ...
-	return nil, nil
+	state := new(multistep.BasicStateBag)
+	state.Put("config", &b.config)
+	state.Put("ui", ui)
+
+	// QEMU?
+
+	steps := []multistep.Step{
+		&commonsteps.StepDownload{
+			Checksum:    b.config.FileChecksum,
+			Description: "rootfs_archive",
+			ResultKey:   "rootfs_archive_path",
+			Url:         b.config.FileUrls,
+			Extension:   b.config.TargetExtension,
+			TargetPath:  b.config.TargetPath,
+		},
+	}
+
+	switch b.config.ImageConfig.ImageBuildMethod {
+
+	case "new":
+		// TODO: Implement
+	case "reuse":
+		// TODO: Implement
+	case "resize":
+		// TODO: Implement
+	default:
+		return nil, errors.New("invalid build method")
+	}
+
+	b.runner = &multistep.BasicRunner{Steps: steps}
+	b.runner.Run(ctx, state)
+
+	if rawErr, ok := state.GetOk("error"); ok {
+		return nil, rawErr.(error)
+	}
+
+	if _, ok := state.GetOk(multistep.StateCancelled); ok {
+		return nil, errors.New("build was cancelled")
+	}
+
+	if _, ok := state.GetOk(multistep.StateHalted); ok {
+		return nil, errors.New("build was halted")
+	}
+
+	return &Artifact{b.config.ImageConfig.ImagePath}, nil
 }

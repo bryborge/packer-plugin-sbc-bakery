@@ -14,10 +14,8 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
-// RemoteFileConfig describes remote file(s) used to build the image.
-// Internally go-getter is being used to fetch files, so you can refer to:
-//
-//	https://godoc.org/github.com/hashicorp/go-getter
+// RemoteFileConfig describes remote file(s) used to build the image (uses go-getter under the hood).
+// Docs: https://godoc.org/github.com/hashicorp/go-getter
 type RemoteFileConfig struct {
 	FileChecksum     string   `mapstructure:"file_checksum" required:"true"`
 	FileChecksumURL  string   `mapstructure:"file_checksum_url"`
