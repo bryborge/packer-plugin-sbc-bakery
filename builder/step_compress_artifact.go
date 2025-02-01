@@ -1,0 +1,136 @@
+package builder
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/mholt/archiver/v3"
+)
+
+// Generates rootfs archive if required.
+type StepCompressArtifact struct {
+	ImageMountPointKey string
+
+	exclusions map[string]bool
+	state      multistep.StateBag
+}
+
+// Run.
+func (s *StepCompressArtifact) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
+	s.prepare(state)
+	ui := state.Get("ui").(packer.Ui)
+	config := state.Get("config").(*Config)
+
+	imagePath := config.ImageConfig.ImagePath
+	imageBase := filepath.Base(config.ImageConfig.ImagePath)
+	imageExt := filepath.Ext(imagePath)
+	imageMountpoint := state.Get(s.ImageMountPointKey).(string)
+
+	if imageExt == ".img" {
+		// no compression needed
+		return multistep.ActionContinue
+	}
+
+	dir, err := os.MkdirTemp("", "compress-artifact")
+	if err != nil {
+		ui.Error(fmt.Sprintf("error while creating temporary dir: %v", err))
+		return multistep.ActionHalt
+	}
+	defer os.RemoveAll(dir)
+
+	var archiveErr error
+	var dst string
+
+	if imageExt == ".gz" {
+		// create rootfs archive with tar
+		dst = filepath.Join(dir, imageBase)
+		cmd := []string{
+			"tar",
+			"-cpzf",
+			dst,
+		}
+
+		for pth := range s.exclusions {
+			cmd = append(cmd, fmt.Sprintf("--exclude=%s", filepath.Join(imageMountpoint, pth)))
+		}
+
+		cmd = append(cmd, "--one-file-system", "-C", imageMountpoint, ".")
+
+		ui.Message("creating rootfs archive")
+		_, archiveErr = exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
+	} else {
+		// create rootfs archive with archiver
+		ui.Message("creating rootfs archive with archiver")
+		dst = filepath.Join(dir, imageBase)
+
+		srcs, err := s.getSrcs()
+		if err != nil {
+			ui.Error(fmt.Sprintf("error while filtering source files: %v", err))
+			return multistep.ActionHalt
+		}
+
+		archiveErr = archiver.Archive(srcs, dst)
+	}
+
+	if archiveErr != nil {
+		ui.Error(fmt.Sprintf("error while creating rootfs archive: %v", archiveErr))
+		return multistep.ActionHalt
+	}
+
+	if _, err := exec.Command("mv", dst, imagePath).CombinedOutput(); err != nil {
+		ui.Error(fmt.Sprintf("error while moving archive: %v", err))
+		return multistep.ActionHalt
+	}
+
+	return multistep.ActionContinue
+}
+
+// Cleanup.
+func (s *StepCompressArtifact) Cleanup(_ multistep.StateBag) {}
+
+// HELPERS
+
+func (s *StepCompressArtifact) prepare(state multistep.StateBag) {
+	config := state.Get("config").(*Config)
+	exclusions := make(map[string]bool)
+
+	for _, mount := range config.ImageConfig.ImageChrootMounts {
+		exclusions[mount.DestinationPath] = true
+	}
+
+	s.state = state
+	s.exclusions = exclusions
+}
+
+// Checks if given location should be skipped for compression.
+// NOTE: this is a naive approach that supports only a top level directory check.
+func (s *StepCompressArtifact) isLocationExcluded(pth string) bool {
+	_, ok := s.exclusions[pth]
+	return ok
+}
+
+func (s *StepCompressArtifact) getSrcs() ([]string, error) {
+	imageMountpoint := s.state.Get(s.ImageMountPointKey).(string)
+	srcs := []string{}
+
+	files, err := os.ReadDir(imageMountpoint)
+	if err != nil {
+		return srcs, err
+	}
+
+	for _, file := range files {
+		loc := filepath.Join("/", file.Name())
+		if s.isLocationExcluded(loc) {
+			continue
+		}
+
+		srcs = append(srcs, loc)
+	}
+
+	return srcs, nil
+}
