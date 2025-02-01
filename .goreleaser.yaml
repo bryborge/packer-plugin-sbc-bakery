@@ -6,9 +6,9 @@ env:
 before:
   hooks:
     - go mod tidy       # you may remove this if you don't use go modules
-    - go generate ./... # you may remove this if you don't need go generate
+    # - go generate ./... # you may remove this if you don't need go generate
     # - go test ./...
-    # - make plugin-check # TODO: Turn this back on after testing the full deploy pipeline
+    - make plugin-check
 
 builds:
   # Check the plugin for the current platform
