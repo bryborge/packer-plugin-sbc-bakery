@@ -1,3 +1,4 @@
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config
 package builder
 
 // A custom builder must implement the Builder interface.
@@ -14,6 +15,8 @@ import (
 	"context"
 	"errors"
 
+	"os"
+
 	cfg "github.com/bryborge/sbc-bakery/config"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -29,6 +32,7 @@ type Config struct {
 	common.PackerConfig  `mapstructure:",squash"`
 	cfg.RemoteFileConfig `mapstructure:",squash"`
 	cfg.ImageConfig      `mapstructure:",squash"`
+	cfg.QemuConfig       `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -63,6 +67,14 @@ func (b *Builder) InitConfig(ctx *interpolate.Context) (warnings []string, error
 	)
 
 	warns, errs = b.config.RemoteFileConfig.Prepare(ctx)
+	warnings = append(warnings, warns...)
+	errors = append(errors, errs...)
+
+	warns, errs = b.config.ImageConfig.Prepare(ctx)
+	warnings = append(warnings, warns...)
+	errors = append(errors, errs...)
+
+	warns, errs = b.config.QemuConfig.Prepare(ctx)
 	warnings = append(warnings, warns...)
 	errors = append(errors, errs...)
 
@@ -102,7 +114,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	state.Put("config", &b.config)
 	state.Put("ui", ui)
 
-	// QEMU?
+	SetupQemu := true
+	if _, ok := os.LookupEnv("DONT_SETUP_QEMU"); ok {
+		SetupQemu = false
+	}
 
 	steps := []multistep.Step{
 		&commonsteps.StepDownload{
@@ -116,16 +131,39 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	switch b.config.ImageConfig.ImageBuildMethod {
-
 	case "new":
 		// TODO: Implement
 	case "reuse":
-		// TODO: Implement
+		steps = append(
+			steps,
+			&StepExtractAndCopyImage{FromKey: "rootfs_archive_path"},
+			&StepMapImage{ResultKey: "image_loop_device"},
+			&StepMountImage{FromKey: "image_loop_device", ResultKey: "image_mountpoint", MountPath: b.config.ImageMountPath},
+		)
 	case "resize":
 		// TODO: Implement
 	default:
 		return nil, errors.New("invalid build method")
 	}
+
+	steps = append(
+		steps,
+		&StepSetupExtra{FromKey: "image_mountpoint"},
+		&StepSetupChroot{ImageMountPointKey: "image_mountpoint"},
+	)
+
+	if SetupQemu {
+		steps = append(
+			steps,
+			&StepSetupQemu{ImageMountPointKey: "image_mountpoint"},
+		)
+	}
+
+	steps = append(
+		steps,
+		&StepChrootProvision{ImageMountPointKey: "image_mountpoint", Hook: hook, SetupQemu: SetupQemu},
+		&StepCompressArtifact{ImageMountPointKey: "image_mountpoint"},
+	)
 
 	b.runner = &multistep.BasicRunner{Steps: steps}
 	b.runner.Run(ctx, state)
