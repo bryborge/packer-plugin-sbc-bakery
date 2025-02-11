@@ -29,9 +29,11 @@ RUN apt update && \
 
 # Install Go (depends on `wget`).
 ARG GO_VERSION=1.23.4
-RUN wget https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz -q -O /tmp/go.tar.gz && \
+RUN wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz -q -O /tmp/go.tar.gz && \
     tar -C /usr/local -xzf /tmp/go.tar.gz && \
     rm /tmp/go.tar.gz
+
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Install goreleaser (depends on `ca-certificates`).
 RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list && \
