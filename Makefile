@@ -15,5 +15,5 @@ plugin-check: install-packer-sdc build
 
 set-go-version:
 	go mod edit -go=$(GO_VERSION)
-	sed -i "s/FROM golang:.*/FROM golang:$(GO_VERSION)/" .devcontainer/Dockerfile
+	sed -i '' "s/ARG GO_VERSION=.*/ARG GO_VERSION=$(GO_VERSION)/" .devcontainer/Dockerfile
 	echo "$(GO_VERSION)" > .go-version
