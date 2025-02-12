@@ -5,8 +5,8 @@ env:
 
 before:
   hooks:
-    - go mod tidy       # you may remove this if you don't use go modules
-    # - go generate ./... # you may remove this if you don't need go generate
+    - go mod tidy
+    # - go generate ./... # TODO: you may remove this if you don't need go generate
     # - go test ./...
     - make plugin-check
 
