@@ -17,3 +17,6 @@ set-go-version:
 	go mod edit -go=$(GO_VERSION)
 	sed -i '' "s/ARG GO_VERSION=.*/ARG GO_VERSION=$(GO_VERSION)/" .devcontainer/Dockerfile
 	echo "$(GO_VERSION)" > .go-version
+
+rm-packer-cache:
+	bash scripts/rm_packer_cache.sh

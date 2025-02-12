@@ -9,6 +9,7 @@ RUN adduser $USERNAME && \
 
 # Packages to install
 ARG PKGS="\
+build-essential \
 ca-certificates \
 git \
 openssh-client \

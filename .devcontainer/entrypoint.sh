@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+# TODO: Clean this up, make more robust
+
 # mount binfmt_misc so we can register the qemu binaries
 mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
 # reset

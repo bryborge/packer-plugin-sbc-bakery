@@ -18,14 +18,13 @@ locals {
 }
 
 source "bakery-sbc-builder" "ubuntu" {
-  # TODO: Switch to latest ubuntu release.
-  file_urls             = ["http://cdimage.ubuntu.com/releases/20.04.2/release/ubuntu-20.04.2-preinstalled-server-arm64+raspi.img.xz"]
-  file_checksum_url     = "http://cdimage.ubuntu.com/releases/20.04.2/release/SHA256SUMS"
+  file_urls             = ["http://cdimage.ubuntu.com/releases/24.04.1/release/ubuntu-24.04.1-preinstalled-server-arm64+raspi.img.xz"]
+  file_checksum_url     = "http://cdimage.ubuntu.com/releases/24.04.1/release/SHA256SUMS"
   file_checksum_type    = "sha256"
   file_target_extension = "xz"
   file_unarchive_cmd    = ["xz", "--decompress", "$ARCHIVE_PATH"]
   image_build_method    = "reuse"
-  image_path            = "ubuntu-20.04.img"
+  image_path            = "ubuntu-24.04.1.img"
   image_size            = "3.1G"
   image_type            = "dos"
 

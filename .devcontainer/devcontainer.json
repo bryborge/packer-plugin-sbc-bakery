@@ -20,11 +20,9 @@
     }
   },
   "runArgs": [
-      // "-u",
-      // "vscode",
       "--privileged",
-      // "--security-opt",
-      // "seccomp=unconfined",
+      "--security-opt",
+      "seccomp=unconfined",
       // map SSH keys for Git
       "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro",
       "-v", "/dev:/dev",
