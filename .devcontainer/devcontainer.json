@@ -20,13 +20,16 @@
     }
   },
   "runArgs": [
-      "-u",
-      "vscode",
-      "--cap-add=SYS_PTRACE",
+      "--privileged",
       "--security-opt",
       "seccomp=unconfined",
       // map SSH keys for Git
-      "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro"
+      "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro",
+      "-v", "/dev:/dev",
+      "-v", ".:/build"
   ],
-  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  "postStartCommand": {
+    "git_safe": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    "entrypoint": "bash ${containerWorkspaceFolder}/.devcontainer/entrypoint.sh"
+  }
 }

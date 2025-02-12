@@ -1,2 +1,6 @@
 # Added by goreleaser init:
 dist/
+
+*.img
+.packer_cache/
+packer-plugin-sbc-bakery
