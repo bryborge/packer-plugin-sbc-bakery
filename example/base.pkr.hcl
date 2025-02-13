@@ -5,7 +5,7 @@ packer {
       source  = "github.com/ethanmdavidson/git"
     }
     bakery = {
-      version = "v0.0.1"
+      version = "v0.0.2"
       source  = "github.com/bryborge/sbc-bakery"
     }
   }
