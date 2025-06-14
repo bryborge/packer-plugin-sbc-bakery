@@ -1,12 +1,5 @@
 FROM public.ecr.aws/lts/ubuntu:jammy
 
-# Setup user
-ARG USERNAME=vscode
-RUN adduser $USERNAME && \
-    mkdir -p /etc/sudoers.d && \
-    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME
-
 # Packages to install
 ARG PKGS="\
 build-essential \
@@ -41,12 +34,17 @@ RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/s
     apt update && \
     apt install goreleaser
 
+# Apt cleanup
+RUN apt autoremove --purge -y && \
+    find /opt /usr/lib -name __pycache__ -print0 | xargs --null rm -rf && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
+# Install Packer (depends on `wget` and `unzip`).
 ENV PACKER_VERSION=1.12.0
 ENV PACKER_LOG=1
 ENV PACKER_CACHE_DIR="/build/.packer_cache"
-
 RUN if [ "$(uname -m)" = "aarch64" ]; then PACKER_ARCH="arm64"; else PACKER_ARCH="amd64"; fi && \
     wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_${PACKER_ARCH}.zip -q -O /tmp/packer.zip && \
     unzip /tmp/packer.zip -d /bin && \
