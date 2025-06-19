@@ -30,6 +30,7 @@
   ],
   "postStartCommand": {
     "git_safe": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-    "entrypoint": "bash ${containerWorkspaceFolder}/.devcontainer/entrypoint.sh"
+    "entrypoint": "sudo bash ${containerWorkspaceFolder}/.devcontainer/entrypoint.sh",
+    "success": "echo 'Container started successfully!'"
   }
 }

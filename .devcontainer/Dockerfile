@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lts/ubuntu:jammy
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 # Packages to install
 ARG PKGS="\
